@@ -7,7 +7,8 @@ import { message, superValidate } from 'sveltekit-superforms/server';
 
 import { editTeam, getTeamBySlug, removeTeam, type Team } from '$lib/server/repository/team'
 import { addPlayer, deletePlayer, getTeamPlayers, type Player } from '$lib/server/repository/player';
-import { addSession } from '$lib/server/repository/session.js';
+import { addSession, type Session } from '$lib/server/repository/session';
+import { addRatings, type PlayerRating } from '$lib/server/repository/player-rating';
 
 export async function load({ params }) {
   const team: Team | undefined = getTeamBySlug(params.slug)
@@ -90,9 +91,10 @@ export const actions = {
     }
 
     const team: Team = { id: form.data.teamId, name: form.data.teamName, slug: '', description: '' }
-    const newSession = addSession(team, form.data.players)
-    if (!newSession) {
-      message(form, 'Could not delete new player', { status: 500 })
+    const newSession: Session = addSession(team)
+    const newPlayerRatings: PlayerRating[] = addRatings(newSession.id, form.data.players)
+    if (!newSession || !newPlayerRatings) {
+      message(form, 'Could not create new session', { status: 500 })
     } else {
       throw redirect(301, `/sessions/${newSession.id}`)
     }

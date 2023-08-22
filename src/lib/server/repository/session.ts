@@ -1,15 +1,6 @@
 import type { Player } from "./player"
 import type { Team } from "./team"
 
-export type PlayerRating = {
-  player: {
-    id: number,
-    name: string,
-    number: number
-  },
-  rate: number | null
-}
-
 export type Session = {
   id: number,
   order: number,
@@ -17,8 +8,7 @@ export type Session = {
     id: number,
     name: string
   }
-  date: Date,
-  ratings: PlayerRating[]
+  date: Date
 }
 
 let sessions: Session[] = [
@@ -29,17 +19,7 @@ let sessions: Session[] = [
       id: 1,
       name: 'C.D Alcalá'
     },
-    date: new Date(),
-    ratings: [
-      {
-        player: {
-          id: Date.now(),
-          number: 69,
-          name: 'Manolito'
-        },
-        rate: null
-      }
-    ]
+    date: new Date()
   }
 ]
 
@@ -51,18 +31,8 @@ export function getSessionById(id: number): Session | undefined {
   return sessions.find(session => session.id === id)
 }
 
-export function addSession(team: Team, players: Player[]): Session {
+export function addSession(team: Team): Session {
   const numSessionOfTeam = sessions.filter(session => session.team.id === team.id).length
-  const ratings: PlayerRating[] = players.map(p => {
-    return {
-      player: {
-        id: p.id,
-        name: p.name,
-        number: p.number
-      },
-      rate: null
-    }
-  })
 
   const newSession: Session = {
     id: Date.now(),
@@ -71,8 +41,7 @@ export function addSession(team: Team, players: Player[]): Session {
       id: team.id,
       name: team.name
     },
-    date: new Date(),
-    ratings
+    date: new Date()
   }
 
   sessions.push(newSession)

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ButtonIcon from '$lib/components/ui/button-icon.svelte';
+	import { autofocus } from '$lib/utils/ui';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import { PlusCircle, Save, XCircle } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms/client';
@@ -26,7 +27,7 @@
 
 <div class="h-full py-10 flex flex-col items-center gap-3">
 	<div class="flex justify-between items-center w-4/5">
-		<h1 class="text-primary-900-50-token text-2xl">Your teams</h1>
+		<h1 class="text-primary-900-50-token text-3xl">Your teams</h1>
 		{#if !creating}
 			<ButtonIcon
 				icon={PlusCircle}
@@ -49,6 +50,7 @@
 			use:enhance
 		>
 			<input
+				use:autofocus
 				type="text"
 				name="name"
 				class="col-span-2 lg:col-span-3 p-3 rounded"

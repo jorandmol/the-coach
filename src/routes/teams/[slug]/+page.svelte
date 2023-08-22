@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ButtonIcon from '$lib/components/ui/button-icon.svelte';
+	import { autofocus } from '$lib/utils/ui.js';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import { Pencil, PlusCircle, Save, Trash2, XCircle, TrafficCone } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms/client';
@@ -95,6 +96,7 @@
 				<input type="hidden" name="id" bind:value={$tForm.id} />
 				<div class="flex flex-col gap-3 justify-center items-center mb-5">
 					<input
+						use:autofocus
 						type="text"
 						name="name"
 						class="text-2xl p-3 rounded"
@@ -207,6 +209,7 @@
 			>
 				<input type="hidden" name="teamId" bind:value={data.team.id} />
 				<input
+					use:autofocus
 					type="text"
 					name="name"
 					class="col-span-3 p-3 rounded"
