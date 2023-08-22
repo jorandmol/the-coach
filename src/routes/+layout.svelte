@@ -6,13 +6,15 @@
 	// Most of your app wide CSS should be put in this file
 	import '../app.postcss';
 
-	import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton';
+	import { AppBar, AppShell, LightSwitch, Toast } from '@skeletonlabs/skeleton';
 
 	import { Users, TrafficCone, ClipboardList } from 'lucide-svelte';
-	import { IconLabel } from '$lib/components';
+	import IconLabel from '$lib/components/ui/icon-label.svelte';
 
 	import { page } from '$app/stores';
 </script>
+
+<Toast />
 
 <AppShell>
 	<svelte:fragment slot="header">

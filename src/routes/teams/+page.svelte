@@ -1,9 +1,11 @@
 <script lang="ts">
-	import ButtonIcon from '$lib/components/ui/button-icon.svelte';
-	import { autofocus } from '$lib/utils/ui';
-	import { ProgressRadial } from '@skeletonlabs/skeleton';
-	import { PlusCircle, Save, XCircle } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms/client';
+
+	import { toastStore, ProgressRadial } from '@skeletonlabs/skeleton';
+	import { PlusCircle, Save, XCircle } from 'lucide-svelte';
+	import ButtonIcon from '$lib/components/ui/button-icon.svelte';
+
+	import { autofocus } from '$lib/utils/ui';
 
 	export let data;
 
@@ -11,6 +13,14 @@
 		onResult({ result }) {
 			if (result.type === 'success') {
 				toggleCreation();
+			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				toastStore.trigger({
+					message: form.message,
+					background: 'variant-filled-error'
+				});
 			}
 		}
 	});

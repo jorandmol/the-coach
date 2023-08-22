@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ButtonIcon from '$lib/components/ui/button-icon.svelte';
 	import { autofocus } from '$lib/utils/ui.js';
-	import { ProgressRadial } from '@skeletonlabs/skeleton';
+	import { ProgressRadial, toastStore } from '@skeletonlabs/skeleton';
 	import { Pencil, PlusCircle, Save, Trash2, XCircle, TrafficCone } from 'lucide-svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 
@@ -18,6 +18,14 @@
 		onResult({ result }) {
 			if (result.type === 'success') {
 				toggleEdition();
+			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				toastStore.trigger({
+					message: form.message,
+					background: 'variant-filled-error'
+				});
 			}
 		}
 	});
@@ -42,6 +50,14 @@
 			if (result.type === 'success' && result.status === 200) {
 				addingPlayer && togglePlayerAddition();
 			}
+		},
+		onUpdated({ form }) {
+			if (form.message) {
+				toastStore.trigger({
+					message: form.message,
+					background: 'variant-filled-error'
+				});
+			}
 		}
 	});
 	let addingPlayer: boolean = false;
@@ -58,7 +74,17 @@
 		errors: sErrors,
 		delayed: sDelayed,
 		enhance: sEnhance
-	} = superForm(data.sessionForm, { dataType: 'json' });
+	} = superForm(data.sessionForm, {
+		dataType: 'json',
+		onUpdated({ form }) {
+			if (form.message) {
+				toastStore.trigger({
+					message: form.message,
+					background: 'variant-filled-error'
+				});
+			}
+		}
+	});
 </script>
 
 <div class="h-full py-10 gap-10 flex flex-col items-center">
