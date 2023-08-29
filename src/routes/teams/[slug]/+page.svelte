@@ -71,7 +71,6 @@
 
 	const {
 		form: sForm,
-		errors: sErrors,
 		delayed: sDelayed,
 		enhance: sEnhance
 	} = superForm(data.sessionForm, {
@@ -95,14 +94,13 @@
 				<p>{data.team.description ? data.team.description : '...'}</p>
 			</div>
 			<div class="flex gap-5 justify-center">
-				<button
-					type="button"
-					class="btn btn-sm variant-filled-surface rounded flex justify-center items-center gap-1"
-					on:click={toggleEdition}
-				>
-					<Pencil />
-					<span class="text-lg">Update</span>
-				</button>
+				<ButtonIcon
+					icon={Pencil}
+					label="Update"
+					variant="filled-surface"
+					onClick={toggleEdition}
+					disabled={$tDelayed}
+				/>
 				<form action="?/deleteTeam" method="post" use:tEnhance>
 					<input type="hidden" name="id" bind:value={$tForm.id} />
 					<button
@@ -111,9 +109,21 @@
 						on:click={(e) =>
 							!confirm('Are you sure you want to delete this team? All info will be lost') &&
 							e.preventDefault()}
+						disabled={$tDelayed}
 					>
-						<Trash2 />
-						<span class="text-lg">Remove</span>
+						{#if !$tDelayed}
+							<Trash2 />
+							<span class="text-lg">Remove</span>
+						{:else}
+							<ProgressRadial
+								...
+								stroke={100}
+								width="w-5"
+								meter="stroke-error-500"
+								track="stroke-error-500/30"
+							/>
+							<span class="text-lg">Removing</span>
+						{/if}
 					</button>
 				</form>
 			</div>
@@ -162,15 +172,13 @@
 							<span class="text-lg">Saving</span>
 						{/if}
 					</button>
-					<button
-						type="button"
-						class="btn btn-sm variant-filled-error rounded flex justify-center items-center gap-1"
-						on:click={toggleEdition}
+					<ButtonIcon
+						icon={XCircle}
+						label="Cancel"
+						variant="filled-error"
+						onClick={toggleEdition}
 						disabled={$tDelayed}
-					>
-						<XCircle />
-						<span class="text-lg">Cancel</span>
-					</button>
+					/>
 				</div>
 			</form>
 		{/if}
@@ -185,6 +193,7 @@
 						label="Add player"
 						variant="filled-success"
 						onClick={togglePlayerAddition}
+						disabled={$sDelayed || $tDelayed}
 					/>
 					{#if data.players && data.players.length > 0}
 						<form action="?/createSession" method="post" use:sEnhance>
@@ -199,7 +208,7 @@
 							<button
 								type="submit"
 								class="col-span-2 lg:col-span-1 btn variant-filled-secondary rounded flex justify-center items-center gap-1"
-								disabled={$sDelayed}
+								disabled={$sDelayed || $tDelayed}
 							>
 								{#if !$sDelayed}
 									<TrafficCone />

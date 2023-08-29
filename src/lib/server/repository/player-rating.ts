@@ -1,6 +1,7 @@
 import type { Player } from "./player"
 
 export type PlayerRating = {
+  id: number,
   sessionId: number,
   player: {
     id: number,
@@ -12,6 +13,7 @@ export type PlayerRating = {
 
 let ratings: PlayerRating[] = [
   {
+    id: 1,
     sessionId: 1,
     player: {
       id: Date.now(),
@@ -29,6 +31,7 @@ export function getSessionRatings(sessionId: number): PlayerRating[] {
 export function addRatings(sessionId: number, players: Player[]): PlayerRating[] {
   const playerRatings: PlayerRating[] = players.map(p => {
     return {
+      id: Date.now(),
       sessionId,
       player: {
         id: p.id,
@@ -42,4 +45,18 @@ export function addRatings(sessionId: number, players: Player[]): PlayerRating[]
   ratings.push(...playerRatings)
 
   return playerRatings
+}
+
+export function editRate(ratingId: number, rate?: number): PlayerRating | undefined {
+  let rating: PlayerRating | undefined = ratings.find(r => r.id === ratingId)
+
+  const newRate = rate ?? null
+  if (rating) {
+    rating = { ...rating, rate: newRate }
+
+    ratings = ratings.filter(r => r.id !== ratingId)
+    ratings.push(rating)
+  }
+
+  return rating
 }
