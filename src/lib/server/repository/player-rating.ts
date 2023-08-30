@@ -1,62 +1,37 @@
-import type { Player } from "./player"
+import { eq } from "drizzle-orm"
+import { db } from "../db"
+import { ratings, type Rating, type NewRating } from "../models/player-rating"
+import type { Player } from "../models/player"
 
-export type PlayerRating = {
-  id: number,
-  sessionId: number,
-  player: {
-    id: number,
-    name: string,
-    number: number
-  },
-  rate: number | null
-}
-
-let ratings: PlayerRating[] = [
-  {
-    id: 1,
-    sessionId: 1,
-    player: {
-      id: Date.now(),
-      number: 69,
-      name: 'Manolito'
-    },
-    rate: null
-  }
-]
-
-export function getSessionRatings(sessionId: number): PlayerRating[] {
-  return ratings.filter(rating => rating.sessionId === sessionId)
-}
-
-export function addRatings(sessionId: number, players: Player[]): PlayerRating[] {
-  const playerRatings: PlayerRating[] = players.map(p => {
-    return {
-      id: Date.now(),
-      sessionId,
+export async function getSessionRatings(sessionId: number) {
+  const result: Rating[] = await db.query.ratings.findMany({
+    where: eq(ratings.sessionId, sessionId),
+    with: {
       player: {
-        id: p.id,
-        name: p.name,
-        number: p.number
-      },
+        columns: {
+          name: true,
+          number: true
+        }
+      }
+    }
+  })
+  return result
+}
+
+export async function addRatings(sessionId: number, players: Player[]) {
+  const newRatings: NewRating[] = players.map(p => {
+    return {
+      sessionId,
+      playerId: p.id,
       rate: null
     }
   })
 
-  ratings.push(...playerRatings)
-
-  return playerRatings
+  const result = await db.insert(ratings).values(newRatings).returning()
+  return result
 }
 
-export function editRate(ratingId: number, rate?: number): PlayerRating | undefined {
-  let rating: PlayerRating | undefined = ratings.find(r => r.id === ratingId)
-
-  const newRate = rate ?? null
-  if (rating) {
-    rating = { ...rating, rate: newRate }
-
-    ratings = ratings.filter(r => r.id !== ratingId)
-    ratings.push(rating)
-  }
-
-  return rating
+export async function editRate(id: number, rate?: number) {
+  const result: Rating[] = await db.update(ratings).set({ rate: rate }).where(eq(ratings.id, id)).returning()
+  return result
 }

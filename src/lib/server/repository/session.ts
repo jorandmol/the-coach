@@ -1,50 +1,41 @@
-import type { Player } from "./player"
-import type { Team } from "./team"
+import { eq, sql } from "drizzle-orm"
+import { db } from "../db"
+import { sessions, type NewSession } from "../models/session"
 
-export type Session = {
-  id: number,
-  order: number,
-  team: {
-    id: number,
-    name: string
-  }
-  date: Date
+export async function getSessions() {
+  const res = await db.query.sessions.findMany({
+    with: {
+      team: {
+        columns: {
+          name: true
+        }
+      }
+    }
+  })
+  return res
 }
 
-let sessions: Session[] = [
-  {
-    id: 1,
-    order: 1,
-    team: {
-      id: 1,
-      name: 'C.D Alcalá'
-    },
-    date: new Date()
-  }
-]
-
-export function getSessions(): Session[] {
-  return sessions
+export async function getSessionById(id: number) {
+  const res = await db.query.sessions.findFirst({
+    where: eq(sessions.id, id),
+    with: {
+      team: {
+        columns: {
+          name: true
+        }
+      }
+    }
+  })
+  return res
 }
 
-export function getSessionById(id: number): Session | undefined {
-  return sessions.find(session => session.id === id)
-}
-
-export function addSession(team: Team): Session {
-  const numSessionOfTeam = sessions.filter(session => session.team.id === team.id).length
-
-  const newSession: Session = {
-    id: Date.now(),
-    order: numSessionOfTeam + 1,
-    team: {
-      id: team.id,
-      name: team.name
-    },
-    date: new Date()
+export async function addSession(teamId: number) {
+  const numTeamSessions = await db.select({ count: sql<number>`count(*)` }).from(sessions).where(eq(sessions.teamId, teamId));
+  const session: NewSession = {
+    teamId: teamId,
+    order: numTeamSessions[0].count + 1
   }
 
-  sessions.push(newSession)
-
-  return newSession
+  const res = await db.insert(sessions).values(session).returning()
+  return res
 }

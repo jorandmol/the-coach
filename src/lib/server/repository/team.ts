@@ -1,59 +1,44 @@
 import { slugify } from "$lib/utils/formater"
+import { eq } from "drizzle-orm"
+import { db } from "../db"
+import { teams, type Team, type NewTeam } from "../models/team"
 
-export type Team = {
-  id: number,
-  name: string,
-  slug: string,
-  description: string
+export async function getTeams() {
+  const res = await db.query.teams.findMany()
+  return res
 }
 
-let teams: Team[] = [
-  {
-    id: 1,
-    name: 'C.D Alcalá',
-    slug: 'cd-alcala',
-    description: 'Football team of Alcalá'
-  }
-]
-
-export function getTeams(): Team[] {
-  return teams
+export async function getTeamBySlug(slug: string) {
+  const res = await db.query.teams.findFirst({
+    where: eq(teams.slug, slug),
+    with: {
+      players: {
+        columns: {
+          teamId: false
+        }
+      }
+    }
+  })
+  return res
 }
 
-export function getTeamBySlug(slug: string): Team | undefined {
-  return teams.find(team => team.slug === slug)
-}
-
-export function addTeam(name: string, description: string = ''): Team {
-  const team: Team = {
-    id: Date.now(),
+export async function addTeam(name: string, description: string = '') {
+  const team: NewTeam = {
     name,
     slug: slugify(name),
     description
   }
 
-  teams.push(team)
-
-  return team
+  const res = await db.insert(teams).values(team).returning()
+  return res
 }
 
-export function editTeam(id: number, name: string, description?: string): Team | undefined {
-  let team: Team | undefined = teams.find(team => team.id === id)
-
-  if (team) {
-    team = { ...team, name, slug: slugify(name), description: description ?? '' }
-
-    teams = teams.filter(team => team.id !== id)
-    teams.push(team)
-  }
-
-  return team
+export async function editTeam(id: number, name: string, description: string | null) {
+  const res = await db.update(teams).set({ name: name, slug: slugify(name), description: description }).where(eq(teams.id, id))
+  return res
 }
 
-export function removeTeam(id: number): boolean {
-  let prevNumTeams = teams.length
-
-  teams = teams.filter(team => team.id !== id)
-
-  return prevNumTeams === teams.length + 1
+export async function removeTeam(id: number) {
+  const res = await db.delete(teams).where(eq(teams.id, id))
+  return res
 }
