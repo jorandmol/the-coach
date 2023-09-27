@@ -1,15 +1,24 @@
 import { message, superValidate } from 'sveltekit-superforms/server';
-import { editRate, getSessionRatings, type PlayerRating } from '$lib/server/repository/player-rating'
-import { getSessionById, type Session } from '$lib/server/repository/session'
+import { editRate, getSessionRatings } from '$lib/server/repository/player-rating'
+import { getSessionById } from '$lib/server/repository/session'
 import { error, fail } from '@sveltejs/kit'
 import { editSchema } from '$lib/schemas/player-rating';
+import type { Session } from '$lib/server/models/session.js';
+import type { Rating } from '$lib/server/models/player-rating.js';
 
 export async function load({ params }) {
-  const session: Session | undefined = getSessionById(Number(params.id))
-  if (!session) {
-    throw error(404, 'Session not found')
+  let session;
+  let ratings;
+  try {
+    const session: Session | undefined = await getSessionById(Number(params.id))
+    if (!session) {
+      throw error(404, 'Session not found')
+    }
+    const ratings: Rating[] = await getSessionRatings(session.id)
+  } catch (e) {
+    console.error(e)
+    throw error(500, 'Something wrong occurred...')
   }
-  const ratings: PlayerRating[] = getSessionRatings(session.id)
 
   const form = superValidate(editSchema)
 
@@ -23,7 +32,7 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const newRating: PlayerRating | undefined = editRate(form.data.ratingId, form.data.rate)
+    const newRating: Rating | undefined = await editRate(form.data.ratingId, form.data.rate)
     if (!newRating) {
       message(form, 'Something wrong happened...', { status: 500 })
     }

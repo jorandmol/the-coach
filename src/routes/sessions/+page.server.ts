@@ -1,7 +1,14 @@
-import { type Session, getSessions } from '$lib/server/repository/session';
+import { getSessions } from '$lib/server/repository/session';
+import { error } from '@sveltejs/kit';
 
 export const load = (async () => {
-  const sessions: Session[] = getSessions()
+  let sessions
+  try {
+    sessions = await getSessions()
+  } catch (e) {
+    console.error(e)
+    throw error(500, 'Something wrong occurred...')
+  }
 
   return { sessions };
 })

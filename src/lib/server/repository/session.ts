@@ -37,5 +37,5 @@ export async function addSession(teamId: number) {
   }
 
   const res = await db.insert(sessions).values(session).returning()
-  return res
+  return res.length > 0 ? res.at(0) : undefined
 }

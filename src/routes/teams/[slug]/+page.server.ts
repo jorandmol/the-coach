@@ -5,28 +5,39 @@ import { insertSchema as sessionInsertSchema } from '$lib/schemas/session';
 import { playerSchema } from '$lib/schemas/player';
 import { message, superValidate } from 'sveltekit-superforms/server';
 
-import { editTeam, getTeamBySlug, removeTeam, type Team } from '$lib/server/repository/team'
-import { addPlayer, deletePlayer, getTeamPlayers, type Player } from '$lib/server/repository/player';
-import { addSession, type Session } from '$lib/server/repository/session';
-import { addRatings, type PlayerRating } from '$lib/server/repository/player-rating';
+import { editTeam, getTeamBySlug, removeTeam } from '$lib/server/repository/team'
+import { addPlayer, deletePlayer } from '$lib/server/repository/player';
+import { addSession } from '$lib/server/repository/session';
+import { addRatings } from '$lib/server/repository/player-rating';
+import type { Session } from '$lib/server/models/session.js';
+import type { Rating } from '$lib/server/models/player-rating.js';
+import type { Team } from '$lib/server/models/team.js';
 
 export async function load({ params }) {
-  const team: Team | undefined = getTeamBySlug(params.slug)
-  if (!team) {
-    throw error(404, 'Team not found')
+  let team;
+  try {
+    team = await getTeamBySlug(params.slug)
+    if (!team) {
+      throw error(404, 'Team not found')
+    }
+  } catch (e) {
+    console.error(e)
+    throw error(500, 'Something wrong occurred...')
   }
 
-  const players: Player[] = getTeamPlayers(team.id)
-
-  const teamForm = await superValidate(team, teamEditSchema)
+  const teamForm = await superValidate({
+    id: team?.id,
+    name: team?.name,
+    description: team?.description
+  }, teamEditSchema)
   const playerForm = await superValidate(playerSchema)
   const sessionForm = await superValidate({
-    teamId: team.id,
-    teamName: team.name,
-    players: players
+    teamId: team?.id,
+    teamName: team?.name,
+    players: team?.players
   }, sessionInsertSchema)
 
-  return { team, players, teamForm, playerForm, sessionForm }
+  return { team, players: team?.players, teamForm, playerForm, sessionForm }
 }
 
 export const actions = {
@@ -36,8 +47,13 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const newTeam: Team | undefined = editTeam(form.data.id, form.data.name, form.data.description)
-    if (!newTeam) {
+    let editedTeam;
+    try {
+      editedTeam = await editTeam(form.data.id, form.data.name, form.data.description)
+      if (!editedTeam) {
+        message(form, 'The team does not exist', { status: 500 })
+      }
+    } catch (e) {
       message(form, 'Something wrong happened...', { status: 500 })
     }
 
@@ -49,11 +65,16 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const isDeleted = removeTeam(form.data.id)
-    if (isDeleted) {
-      throw redirect(303, '/teams')
-    } else {
-      message(form, 'Could not delete the team', { status: 500 })
+    let deletedTeam;
+    try {
+      deletedTeam = await removeTeam(form.data.id)
+      if (deletedTeam && deletedTeam.length > 0) {
+        throw redirect(303, '/teams')
+      } else {
+        message(form, 'Could not delete the team', { status: 500 })
+      }
+    } catch (e) {
+      message(form, 'Something wrong happened...', { status: 500 })
     }
 
     return { form }
@@ -64,9 +85,13 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const newPlayer = addPlayer(form.data.teamId, form.data.name, form.data.number)
-    if (!newPlayer) {
-      message(form, 'Could not add new player', { status: 500 })
+    try {
+      const newPlayer = addPlayer(form.data.teamId, form.data.name, form.data.number)
+      if (!newPlayer) {
+        message(form, 'Could not add new player', { status: 500 })
+      }
+    } catch (e) {
+      message(form, 'Something wrong happened...', { status: 500 })
     }
 
     return { form }
@@ -77,9 +102,13 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const isDeleted = deletePlayer(form.data.id ? form.data.id : 0)
-    if (!isDeleted) {
-      message(form, 'Could not delete new player', { status: 500 })
+    try {
+      const isDeleted = deletePlayer(form.data.id ? form.data.id : 0)
+      if (!isDeleted) {
+        message(form, 'Could not delete new player', { status: 500 })
+      }
+    } catch (e) {
+      message(form, 'Something wrong happened...', { status: 500 })
     }
 
     return { form }
@@ -90,13 +119,25 @@ export const actions = {
       return fail(400, { form })
     }
 
-    const team: Team = { id: form.data.teamId, name: form.data.teamName, slug: '', description: '' }
-    const newSession: Session = addSession(team)
-    const newPlayerRatings: PlayerRating[] = addRatings(newSession.id, form.data.players)
-    if (!newSession || !newPlayerRatings) {
-      message(form, 'Could not create new session', { status: 500 })
-    } else {
-      throw redirect(301, `/sessions/${newSession.id}`)
+    let players = form.data.players.map(player => {
+      return { ...player, teamId: form.data.teamId }
+    })
+
+    try {
+      let newSession: Session | undefined = await addSession(form.data.teamId)
+
+      let newPlayerRatings: Rating[] = []
+      if (newSession) {
+        newPlayerRatings = await addRatings(newSession.id, players)
+      }
+
+      if (!newSession || !newPlayerRatings) {
+        message(form, 'Could not create new session', { status: 500 })
+      } else {
+        throw redirect(301, `/sessions/${newSession.id}`)
+      }
+    } catch (e) {
+      message(form, 'Something wrong happened...', { status: 500 })
     }
 
     return { form }

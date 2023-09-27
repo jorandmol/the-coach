@@ -7,7 +7,7 @@ export const insertSchema = z.object({
 export const editSchema = z.object({
   id: z.number(),
   name: z.string().min(1, { message: 'Name is required' }).max(50, { message: 'Name is too long' }),
-  description: z.string().max(255, { message: 'Description is too long' }).optional()
+  description: z.string().max(255, { message: 'Description is too long' }).nullable()
 });
 
 export const deleteSchema = z.object({

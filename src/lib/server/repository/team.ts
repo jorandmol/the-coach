@@ -1,7 +1,7 @@
 import { slugify } from "$lib/utils/formater"
 import { eq } from "drizzle-orm"
 import { db } from "../db"
-import { teams, type Team, type NewTeam } from "../models/team"
+import { teams, type NewTeam } from "../models/team"
 
 export async function getTeams() {
   const res = await db.query.teams.findMany()
@@ -30,12 +30,12 @@ export async function addTeam(name: string, description: string = '') {
   }
 
   const res = await db.insert(teams).values(team).returning()
-  return res
+  return res.length > 0 ? res.at(0) : undefined
 }
 
 export async function editTeam(id: number, name: string, description: string | null) {
   const res = await db.update(teams).set({ name: name, slug: slugify(name), description: description }).where(eq(teams.id, id))
-  return res
+  return res.length > 0 ? res.at(0) : undefined
 }
 
 export async function removeTeam(id: number) {

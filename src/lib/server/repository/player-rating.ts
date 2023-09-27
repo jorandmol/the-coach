@@ -33,5 +33,5 @@ export async function addRatings(sessionId: number, players: Player[]) {
 
 export async function editRate(id: number, rate?: number) {
   const result: Rating[] = await db.update(ratings).set({ rate: rate }).where(eq(ratings.id, id)).returning()
-  return result
+  return result.length > 0 ? result.at(0) : undefined
 }
