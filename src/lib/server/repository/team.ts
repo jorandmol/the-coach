@@ -34,11 +34,11 @@ export async function addTeam(name: string, description: string = '') {
 }
 
 export async function editTeam(id: number, name: string, description: string | null) {
-  const res = await db.update(teams).set({ name: name, slug: slugify(name), description: description }).where(eq(teams.id, id))
+  const res = await db.update(teams).set({ name: name, slug: slugify(name), description: description }).where(eq(teams.id, id)).returning()
   return res.length > 0 ? res.at(0) : undefined
 }
 
 export async function removeTeam(id: number) {
-  const res = await db.delete(teams).where(eq(teams.id, id))
+  const res = await db.delete(teams).where(eq(teams.id, id)).returning()
   return res
 }

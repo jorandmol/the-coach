@@ -66,15 +66,20 @@ export const actions = {
     }
 
     let deletedTeam;
+    let success = false;
     try {
       deletedTeam = await removeTeam(form.data.id)
       if (deletedTeam && deletedTeam.length > 0) {
-        throw redirect(303, '/teams')
+        success = true
       } else {
-        message(form, 'Could not delete the team', { status: 500 })
+        message(form, 'Could not delete the team', { status: 400 })
       }
     } catch (e) {
       message(form, 'Something wrong happened...', { status: 500 })
+    }
+
+    if (success) {
+      throw redirect(303, '/teams')
     }
 
     return { form }
@@ -123,8 +128,9 @@ export const actions = {
       return { ...player, teamId: form.data.teamId }
     })
 
+    let newSession: Session | undefined;
     try {
-      let newSession: Session | undefined = await addSession(form.data.teamId)
+      newSession = await addSession(form.data.teamId)
 
       let newPlayerRatings: Rating[] = []
       if (newSession) {
@@ -133,11 +139,13 @@ export const actions = {
 
       if (!newSession || !newPlayerRatings) {
         message(form, 'Could not create new session', { status: 500 })
-      } else {
-        throw redirect(301, `/sessions/${newSession.id}`)
       }
     } catch (e) {
       message(form, 'Something wrong happened...', { status: 500 })
+    }
+
+    if (newSession) {
+      throw redirect(301, `/sessions/${newSession.id}`)
     }
 
     return { form }

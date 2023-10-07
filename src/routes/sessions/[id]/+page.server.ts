@@ -7,17 +7,20 @@ import type { Session } from '$lib/server/models/session.js';
 import type { Rating } from '$lib/server/models/player-rating.js';
 
 export async function load({ params }) {
-  let session;
-  let ratings;
+  let session: Session | undefined;
+  let ratings: Rating[] | undefined;
   try {
-    const session: Session | undefined = await getSessionById(Number(params.id))
-    if (!session) {
-      throw error(404, 'Session not found')
+    session = await getSessionById(Number(params.id))
+    if (session) {
+      ratings = await getSessionRatings(session.id)
     }
-    const ratings: Rating[] = await getSessionRatings(session.id)
   } catch (e) {
     console.error(e)
     throw error(500, 'Something wrong occurred...')
+  }
+
+  if (!session) {
+    throw error(404, 'Session not found')
   }
 
   const form = superValidate(editSchema)

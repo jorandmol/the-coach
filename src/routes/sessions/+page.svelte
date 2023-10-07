@@ -31,6 +31,6 @@
 			{/each}
 		</div>
 	{:else}
-		<h2 class="text-lg">You have no teams yet</h2>
+		<h2 class="text-lg">You have no sessions yet</h2>
 	{/if}
 </div>

@@ -62,11 +62,8 @@
 	});
 	let addingPlayer: boolean = false;
 	function togglePlayerAddition() {
+		pReset();
 		addingPlayer = !addingPlayer;
-
-		if (!addingPlayer) {
-			pReset();
-		}
 	}
 
 	const {
@@ -203,7 +200,7 @@
 								<input type="hidden" bind:value={$sForm.players[i].id} />
 								<input type="hidden" bind:value={$sForm.players[i].name} />
 								<input type="hidden" bind:value={$sForm.players[i].number} />
-								<input type="hidden" bind:value={$sForm.players[i].teamId} />
+								<input type="hidden" bind:value={data.team.id} />
 							{/each}
 							<button
 								type="submit"
@@ -302,7 +299,7 @@
 						{#if !addingPlayer || $sDelayed}
 							<form action="?/deletePlayer" method="post" use:pEnhance>
 								<input type="hidden" name="id" value={player.id} />
-								<input type="hidden" name="teamId" bind:value={player.teamId} />
+								<input type="hidden" name="teamId" bind:value={data.team.id} />
 								<input type="hidden" name="name" bind:value={player.name} />
 								<input type="hidden" name="number" bind:value={player.number} />
 								<button
