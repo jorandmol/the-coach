@@ -11,7 +11,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"format": "prettier --plugin-search-dir . --write .",
+		"db:migrate": "drizzle-kit generate:pg",
+		"db:push": "drizzle-kit push:pg"
 	},
 	"devDependencies": {
 		"@floating-ui/dom": "^1.5.1",
@@ -41,6 +43,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"dotenv": "^16.3.1",
 		"drizzle-orm": "^0.28.5",
 		"lucide-svelte": "^0.268.0",
 		"postgres": "^3.3.5"
